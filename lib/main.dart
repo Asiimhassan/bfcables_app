@@ -7,32 +7,32 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // NAYA FIX: Check karein ke Firebase pehle se start hai ya nahi
-    if (Firebase.apps.isEmpty) { 
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "YAHAN_API_KEY_LIKHEIN",
-          authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
-          projectId: "bfcablespos-1b3a7", 
-          storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
-          messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
-          appId: "YAHAN_APP_ID_LIKHEIN",
-        ),
-      );
-    }
-    
-    runApp(const BFCablesApp());
+    // Android mein google-services.json pehle se hota hai,
+    // isliye humein options: wala lambe code ki zaroorat nahi.
+    await Firebase.initializeApp();
     
   } catch (e) {
-    // Error aane par red screen
-    runApp(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text("Firebase Connection Error:\n\n$e", style: const TextStyle(color: Colors.red)),
+    // Agar pehle se start ho chuka hai (duplicate-app), to hum is error ko nazarandaz karenge
+    if (!e.toString().contains("duplicate-app")) {
+      runApp(MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                "Firebase Error:\n\n$e",
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            ),
+          ),
         ),
-      ),
-    ));
+      ));
+      return; // Yahan ruk jayenge
+    }
   }
+  
+  // Agar sab theek hai ya duplicate error tha, to app chalao
+  runApp(const BFCablesApp());
 }
 
 class BFCablesApp extends StatelessWidget {
