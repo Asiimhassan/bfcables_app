@@ -7,33 +7,28 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Firebase connect karne ki koshish karo
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: "YAHAN_API_KEY_LIKHEIN",
-        authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
-        projectId: "bfcablespos-1b3a7", 
-        storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
-        messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
-        appId: "YAHAN_APP_ID_LIKHEIN",
-      ),
-    );
+    // NAYA FIX: Check karein ke Firebase pehle se start hai ya nahi
+    if (Firebase.apps.isEmpty) { 
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "YAHAN_API_KEY_LIKHEIN",
+          authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
+          projectId: "bfcablespos-1b3a7", 
+          storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
+          messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
+          appId: "YAHAN_APP_ID_LIKHEIN",
+        ),
+      );
+    }
     
-    // Agar connect ho jaye to app chalao
     runApp(const BFCablesApp());
     
   } catch (e) {
-    // Agar connect NA ho (Error aa jaye) to yeh error screen dikhao
+    // Error aane par red screen
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              "Firebase Error:\n\n$e",
-              style: const TextStyle(color: Colors.red, fontSize: 16),
-            ),
-          ),
+          child: Text("Firebase Connection Error:\n\n$e", style: const TextStyle(color: Colors.red)),
         ),
       ),
     ));
