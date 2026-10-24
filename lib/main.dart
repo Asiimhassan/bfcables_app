@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  
+  // Yahan apni Firebase config values dalein (jo aapne pehle copy ki thin)
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "YAHAN_API_KEY_LIKHEIN",
+      authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
+      projectId: "bfcablespos-1b3a7", 
+      storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
+      messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
+      appId: "YAHAN_APP_ID_LIKHEIN",
+    ),
+  );
+  
   runApp(const BFCablesApp());
 }
 
@@ -26,7 +39,7 @@ class BFCablesApp extends StatelessWidget {
   }
 }
 
-// Main Screen with 4 Tabs & Animation
+// Main Screen with 4 Tabs
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
@@ -53,7 +66,6 @@ class _MainScreenState extends State<MainScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      // Animated Switcher for smooth tab transitions
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         transitionBuilder: (Widget child, Animation<double> animation) {
@@ -84,7 +96,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// 1. Dashboard Tab (With Animation)
+// 1. Dashboard Tab
 class DashboardTab extends StatelessWidget {
   const DashboardTab({Key? key}) : super(key: key);
 
@@ -103,7 +115,6 @@ class DashboardTab extends StatelessWidget {
 
         return Column(
           children: [
-            // Animated Total Sales Card
             TweenAnimationBuilder(
               tween: Tween<double>(begin: 0, end: totalAmount),
               duration: const Duration(seconds: 1),
@@ -139,7 +150,6 @@ class DashboardTab extends StatelessWidget {
                 itemBuilder: (context, index) {
                   var data = sales[index].data() as Map<String, dynamic>;
                   
-                  // Staggered animation for list items
                   return TweenAnimationBuilder(
                     tween: Tween<double>(begin: 0, end: 1),
                     duration: Duration(milliseconds: 400 + (index * 100)),
@@ -155,10 +165,25 @@ class DashboardTab extends StatelessWidget {
                       elevation: 2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InvoiceDetailScreen(invoiceData: data),
+                            ),
+                          );
+                        },
                         leading: const Icon(Icons.receipt_long, color: Colors.blue),
                         title: Text("Invoice: ${data['InvoiceNo']}", style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text("Customer: ${data['CustomerName']}\nDate: ${data['Date']}"),
-                        trailing: Text("Rs. ${data['Total']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text("Rs. ${data['Total']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16)),
+                            const SizedBox(width: 5),
+                            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -171,8 +196,99 @@ class DashboardTab extends StatelessWidget {
     );
   }
 }
+// 2. Invoice Detail Screen (Jab bill par click ho)
+class InvoiceDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> invoiceData;
 
-// 2. Stock Tab
+  const InvoiceDetailScreen({Key? key, required this.invoiceData}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<dynamic> items = invoiceData['Items'] ?? [];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Invoice: ${invoiceData['InvoiceNo']}"),
+        backgroundColor: const Color(0xFF2C3E50),
+        foregroundColor: Colors.white,
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Customer: ${invoiceData['CustomerName']}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(invoiceData['Date'], style: const TextStyle(color: Colors.grey)),
+                  ],
+                ),
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Total Amount:", style: TextStyle(fontSize: 16)),
+                    Text("Rs. ${invoiceData['Total']}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Paid Amount:", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    Text("Rs. ${invoiceData['Paid']}", style: const TextStyle(fontSize: 14, color: Colors.blue)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text("Items List", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            ),
+          ),
+
+          Expanded(
+            child: items.isEmpty 
+              ? const Center(child: Text("No items found for this invoice."))
+              : ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    var item = items[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                          child: Text("${index + 1}", style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                        ),
+                        title: Text(item['ProductName'] ?? "Unknown", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text("Qty: ${item['Qty']} x Rs. ${item['UnitPrice']}"),
+                        trailing: Text("Rs. ${item['Total']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87, fontSize: 15)),
+                      ),
+                    );
+                  },
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 3. Stock Tab
 class StockTab extends StatelessWidget {
   const StockTab({Key? key}) : super(key: key);
 
@@ -182,9 +298,7 @@ class StockTab extends StatelessWidget {
       stream: FirebaseFirestore.instance.collection('Products').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        
         var products = snapshot.data!.docs;
-
         return ListView.builder(
           itemCount: products.length,
           itemBuilder: (context, index) {
@@ -206,7 +320,7 @@ class StockTab extends StatelessWidget {
   }
 }
 
-// 3. Customers Tab
+// 4. Customers Tab
 class CustomerTab extends StatelessWidget {
   const CustomerTab({Key? key}) : super(key: key);
 
@@ -216,9 +330,7 @@ class CustomerTab extends StatelessWidget {
       stream: FirebaseFirestore.instance.collection('Customers').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        
         var customers = snapshot.data!.docs;
-
         return ListView.builder(
           itemCount: customers.length,
           itemBuilder: (context, index) {
@@ -247,7 +359,7 @@ class CustomerTab extends StatelessWidget {
   }
 }
 
-// 4. Vendors Tab
+// 5. Vendors Tab
 class VendorTab extends StatelessWidget {
   const VendorTab({Key? key}) : super(key: key);
 
@@ -257,9 +369,7 @@ class VendorTab extends StatelessWidget {
       stream: FirebaseFirestore.instance.collection('Vendors').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        
         var vendors = snapshot.data!.docs;
-
         return ListView.builder(
           itemCount: vendors.length,
           itemBuilder: (context, index) {
