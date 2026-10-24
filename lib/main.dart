@@ -6,19 +6,38 @@ import 'package:intl/intl.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Yahan apni Firebase config values dalein (jo aapne pehle copy ki thin)
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "YAHAN_API_KEY_LIKHEIN",
-      authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
-      projectId: "bfcablespos-1b3a7", 
-      storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
-      messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
-      appId: "YAHAN_APP_ID_LIKHEIN",
-    ),
-  );
-  
-  runApp(const BFCablesApp());
+  try {
+    // Firebase connect karne ki koshish karo
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "YAHAN_API_KEY_LIKHEIN",
+        authDomain: "YAHAN_AUTH_DOMAIN_LIKHEIN",
+        projectId: "bfcablespos-1b3a7", 
+        storageBucket: "YAHAN_STORAGE_BUCKET_LIKHEIN",
+        messagingSenderId: "YAHAN_SENDER_ID_LIKHEIN",
+        appId: "YAHAN_APP_ID_LIKHEIN",
+      ),
+    );
+    
+    // Agar connect ho jaye to app chalao
+    runApp(const BFCablesApp());
+    
+  } catch (e) {
+    // Agar connect NA ho (Error aa jaye) to yeh error screen dikhao
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              "Firebase Error:\n\n$e",
+              style: const TextStyle(color: Colors.red, fontSize: 16),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class BFCablesApp extends StatelessWidget {
