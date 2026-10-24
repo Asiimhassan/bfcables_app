@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891998043548",
+    "project_id": "bfcablespos-1b3a7",
+    "storage_bucket": "bfcablespos-1b3a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891998043548:android:0958161ba49661fe41dc59",
+        "android_client_info": {
+          "package_name": "com.example.bfcables_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMdqjTfZpOpBJ3JIWcoIBEkGK81l420fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
